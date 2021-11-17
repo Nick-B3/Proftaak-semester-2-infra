@@ -5,7 +5,7 @@ Om mee te doen met ons project ga naar onze website die in onze README te vinden
 [Gin Web Framework](https://github.com/gin-gonic/gin)
 
 ## Protocol JSON 
-```
+```JSON
 {
     "Location":"right/left",
     "Duration":"0-100(ms)",
