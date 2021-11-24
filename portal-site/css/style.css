@@ -1,8 +1,14 @@
+@font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/Montserrat/Montserrat-Regular.tff') format('tff');
+}
+
 .header {
     padding: 80px;
     text-align: center;
     background: #1abc9c;
     color: white;
+    font-family: Montserrat;
 }
 .navbar {
     overflow: hidden;
