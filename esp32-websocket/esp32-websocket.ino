@@ -1,3 +1,5 @@
+#include <FastLED.h>
+
 #include "defines.h"
 #include "credentials.h"
 
@@ -5,38 +7,85 @@
 #include <WebSockets2_Generic.h>
 #include <ArduinoJson.h>
 
+#define NUM_LEDS 260
+#define LED_PIN 27
+#define LED_TYPE WS2812B
+#define COLOR_ORDER GRB
+#define LED_BRIGHTNESS 255
+
+CRGB leds[NUM_LEDS];
+
 using namespace websockets2_generic;
 
 void onMessageCallback(WebsocketsMessage message) 
 {
-  Serial.print("Received: ");
-  StaticJsonDocument<200> jsonDoc;
-  DeserializationError error = deserializeJson(jsonDoc, message.data());
-  if (error)
-  {
+  Serial.println("Received: ");
+  // const char* input;
+  // size_t inputLength; (optional)
+  
+  StaticJsonDocument<384> doc;
+  DeserializationError error = deserializeJson(doc, message.data());
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
     return;
   }
   
-  const char* type_txt = jsonDoc["type"];
-  const char* content = jsonDoc["content"];
-  String type_txt_str = String(type_txt);
-  String content_str = String(content);
+  const char* Location = doc["Location"]; // "right/left"
+  int Duration = doc["Duration"]; // nullptr
+  
+  JsonObject Type = doc["Type"];
+  
+  JsonObject Type_Light = Type["Light"];
+  const char* Type_Light_Onoff = Type_Light["Onoff"]; // nullptr
+  
+  JsonObject Type_Light_RGB = Type_Light["RGB"];
+  int Type_Light_RGB_Red = Type_Light_RGB["Red"]; // "0"
+  int Type_Light_RGB_Green = Type_Light_RGB["Green"]; // "255"
+  int Type_Light_RGB_Blue = Type_Light_RGB["Blue"]; // "0"
+  
+  const char* Type_Light_HEX = Type_Light["HEX"]; // nullptr
+  
+  int Type_Sound_Frequency = Type["Sound"]["Frequency"]; // nullptr
+  
+  bool Type_Movement = Type["Movement"]; // nullptr
+  
+  int Intensity_Light = doc["Intensity"]["LightIntensity"]; // "100"
+  int Intensity_Sound = doc["Intensity"]["Sound"]; // "100"
 
-  Serial.print(type_txt_str);
-  Serial.print(": ");
-  Serial.println(content_str);
+  
+  Serial.print("Red: ");
+  Serial.println(Type_Light_RGB_Red);
+  Serial.print("Green: ");
+  Serial.println(Type_Light_RGB_Green);
+  Serial.print("Blue: ");
+  Serial.println(Type_Light_RGB_Blue);
+  Serial.print("Intensity_Light: ");
+  Serial.println(Intensity_Light);
 
 
-
-  if (type_txt_str == "LED" && content_str == "AAN")
-  {
-    digitalWrite(ONBOARD_LED,HIGH);
+//  if value this, do this
+  if (Type_Light_RGB_Red == 255) {
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Red;
+    }
+  } else if (Type_Light_RGB_Green == 255) {
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Green;
+    }
+  } else if (Type_Light_RGB_Blue == 255){
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Blue;
+    }
   }
-  else if (type_txt_str == "LED" && content_str == "UIT")
-  {
-    digitalWrite(ONBOARD_LED,LOW);
-  }
+
+
+  FastLED.setBrightness(Intensity_Light);
+  FastLED.show();
 }
+
+
 
 void onEventsCallback(WebsocketsEvent event, String data) 
 {
@@ -63,14 +112,14 @@ void onEventsCallback(WebsocketsEvent event, String data)
 
 WebsocketsClient client;
 
-void setup() 
-{
+void setup() {
   Serial.begin(115200);
-
+  
   Serial.println("\nStarting esp32-websocket on " + String(ARDUINO_BOARD));
   Serial.println(WEBSOCKETS2_GENERIC_VERSION);
 
   pinMode(ONBOARD_LED,OUTPUT);
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -115,6 +164,7 @@ void setup()
   else 
   {
     Serial.println("Not Connected!");
+    ESP.restart();
   }
 }
 
