@@ -1,28 +1,27 @@
-#include <FastLED.h>
-
 #include "defines.h"
 #include "credentials.h"
 
-#include <WiFi.h>
 #include <WebSockets2_Generic.h>
 #include <ArduinoJson.h>
+#include <FastLED.h>
 
-#define NUM_LEDS 260
-#define LED_PIN 27
+#define NUM_LEDS 64
+#define LED_PIN 6
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
-#define LED_BRIGHTNESS 255
 
 CRGB leds[NUM_LEDS];
 
 using namespace websockets2_generic;
 
-void onMessageCallback(WebsocketsMessage message) 
+void(* resetFunc) (void) = 0;
+
+void onMessageCallback(WebsocketsMessage message)
 {
   Serial.println("Received: ");
   // const char* input;
   // size_t inputLength; (optional)
-  
+
   StaticJsonDocument<384> doc;
   DeserializationError error = deserializeJson(doc, message.data());
 
@@ -31,30 +30,29 @@ void onMessageCallback(WebsocketsMessage message)
     Serial.println(error.c_str());
     return;
   }
-  
+
   const char* Location = doc["Location"]; // "right/left"
   int Duration = doc["Duration"]; // nullptr
-  
+
   JsonObject Type = doc["Type"];
-  
+
   JsonObject Type_Light = Type["Light"];
   const char* Type_Light_Onoff = Type_Light["Onoff"]; // nullptr
-  
+
   JsonObject Type_Light_RGB = Type_Light["RGB"];
   int Type_Light_RGB_Red = Type_Light_RGB["Red"]; // "0"
   int Type_Light_RGB_Green = Type_Light_RGB["Green"]; // "255"
   int Type_Light_RGB_Blue = Type_Light_RGB["Blue"]; // "0"
-  
+
   const char* Type_Light_HEX = Type_Light["HEX"]; // nullptr
-  
+
   int Type_Sound_Frequency = Type["Sound"]["Frequency"]; // nullptr
-  
+
   bool Type_Movement = Type["Movement"]; // nullptr
-  
+
   int Intensity_Light = doc["Intensity"]["LightIntensity"]; // "100"
   int Intensity_Sound = doc["Intensity"]["Sound"]; // "100"
 
-  
   Serial.print("Red: ");
   Serial.println(Type_Light_RGB_Red);
   Serial.print("Green: ");
@@ -63,7 +61,6 @@ void onMessageCallback(WebsocketsMessage message)
   Serial.println(Type_Light_RGB_Blue);
   Serial.print("Intensity_Light: ");
   Serial.println(Intensity_Light);
-
 
 //  if value this, do this
   if (Type_Light_RGB_Red == 255) {
@@ -80,31 +77,36 @@ void onMessageCallback(WebsocketsMessage message)
     }
   }
 
-
   FastLED.setBrightness(Intensity_Light);
   FastLED.show();
 }
 
-
-
-void onEventsCallback(WebsocketsEvent event, String data) 
+void onEventsCallback(WebsocketsEvent event, String data)
 {
   (void) data;
-  
-  if (event == WebsocketsEvent::ConnectionOpened) 
+
+  if (event == WebsocketsEvent::ConnectionOpened)
   {
     Serial.println("Connection Opened");
-  } 
-  else if (event == WebsocketsEvent::ConnectionClosed) 
+  }
+  else if (event == WebsocketsEvent::ConnectionClosed)
   {
     Serial.println("Connection Closed");
-    ESP.restart();
-  } 
-  else if (event == WebsocketsEvent::GotPing) 
+    #if defined(ARDUINO)
+      #if defined(ARDUINO_SAMD_MKR1000)
+        NVIC_SystemReset();
+      #else
+        resetFunc();
+      #endif
+    #else
+      ESP.restart();
+    #endif
+  }
+  else if (event == WebsocketsEvent::GotPing)
   {
     Serial.println("Got a Ping!");
-  } 
-  else if (event == WebsocketsEvent::GotPong) 
+  }
+  else if (event == WebsocketsEvent::GotPong)
   {
     Serial.println("Got a Pong!");
   }
@@ -114,13 +116,13 @@ WebsocketsClient client;
 
 void setup() {
   Serial.begin(115200);
-  
-  Serial.println("\nStarting esp32-websocket on " + String(ARDUINO_BOARD));
+
+  Serial.println("\nStarting Websocket Connection on " + String(BOARD_NAME));
   Serial.println(WEBSOCKETS2_GENERIC_VERSION);
 
   pinMode(ONBOARD_LED,OUTPUT);
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-  
+
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
 
@@ -132,7 +134,7 @@ void setup() {
   }
 
   // Check if connected to Wi-Fi
-  if (WiFi.status() != WL_CONNECTED) 
+  if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("No Wifi!");
     return;
@@ -147,28 +149,29 @@ void setup() {
   // run callback when events are occurring
   client.onEvent(onEventsCallback);
 
-  #if USING_INSECURE_MODE
-    client.setInsecure();
-  #else
-    // Before connecting, set the ssl fingerprint of the server
-    client.setCACert(echo_org_ssl_ca_cert);
-  #endif
-
   // Connect to server
   bool connected = client.connect(websockets_connection_string);
 
-  if (connected) 
+  if (connected)
   {
     Serial.println("Connected!");
-  } 
-  else 
+  }
+  else
   {
     Serial.println("Not Connected!");
-    ESP.restart();
+    #if defined(ARDUINO)
+      #if defined(ARDUINO_SAMD_MKR1000)
+        NVIC_SystemReset();
+      #else
+        resetFunc();
+      #endif
+    #else
+      ESP.restart();
+    #endif
   }
 }
 
-void loop() 
+void loop()
 {
   client.poll();
 }
