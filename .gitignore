@@ -13,4 +13,4 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-/esp32-websocket/credentials.h
+/websocket/credentials.h
