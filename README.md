@@ -1,7 +1,7 @@
 # Proftaak-semester-2-infra
-Het proftaak project van Fontys ICT infrastructuur semester 2. In dit project maken wij een dirigent server deze kan meerdere IOT devices aansturen.  
-Om mee te doen met ons project ga naar onze website die in onze README te vinden is. Dit legt stap voor stap uit hoe je jouw device aan onze omgeving kan koppelen.
+Het proftaak project van Fontys ICT infrastructuur semester 2. 
 
+In dit project wordt er aan de hand van een zelfbedacht protocol data verstuurd over een websocket naar de verbonden IoT devices. 
 ## Installatie handleiding
 
 ### Go Websocket server
@@ -9,7 +9,10 @@ Om de server te gebruiken als lokale development server:
 1. Download de github als zip
 2. Unzip het bestand.
 3. Ga naar go-websocket-server/
-4. Voer de commando uit: go run .
+4. Voer het commando uit: go run .
+
+Onze websocket stream stuurt data vanaf:
+>https://socket.fhict.be/ws
 
 ### Websocket client
 Om de websocket te gebruiken op een Arduino WiFi Shield 101 and MKR1000 bord, moet je een speciale Wifi101 bibliotheek gebruiken.
@@ -21,12 +24,14 @@ Om de websocket te gebruiken op een Arduino WiFi Shield 101 and MKR1000 bord, mo
 6. Verander credentials-example.h -> credentials.h
 7. Pas Wi-Fi naam en wachtwoord aan om met Wi-Fi te verbinden
 
+De deserialized JSON-string is aan te roepen door gebruik te maken van de gedefinieerde variabelen, bijvoorbeeld Type_Light_RGB_Green of Intensity_Light. 
 ## Credits
 [Gin Web Framework](https://github.com/gin-gonic/gin)
 <br>
 [Websockets 2 Library for ESP32/Arduino boards](https://github.com/khoih-prog/WebSockets2_Generic)
 
-## Protocol JSON 
+## Protocol
+De volgende data komt in JSON-string format binnen op de websocket stream.
 ```JSON
 {
     "Location":"right/left",
