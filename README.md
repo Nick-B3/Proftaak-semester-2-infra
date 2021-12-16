@@ -5,7 +5,11 @@ Om mee te doen met ons project ga naar onze website die in onze README te vinden
 ## Installatie handleiding
 
 ### Go Websocket server
-To use ...:
+Om de server te gebruiken als lokale development server:
+1. Download de github als zip
+2. Unzip het bestand.
+3. Ga naar go-websocket-server/
+4. Voer de commando uit: go run .
 
 ### Websocket client
 Om de websocket te gebruiken op een Arduino WiFi Shield 101 and MKR1000 bord, moet je een speciale Wifi101 bibliotheek gebruiken.
