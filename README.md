@@ -17,6 +17,9 @@ Om de websocket te gebruiken op een Arduino WiFi Shield 101 and MKR1000 bord, mo
 2. Klik op code, en download ZIP-bestand.
 3. Pak het ZIP-bestand uit en hernoem het naar Wifi101.
 4. Kopieer de gehele map naar de Arduino libraries' map (Documents/Arduino/libraries/).
+5. Verander in de Websocket INI de LED pin en aantal LED
+6. Verander credentials-example.h -> credentials.h
+7. Pas Wi-Fi naam en wachtwoord aan om met Wi-Fi te verbinden
 
 ## Credits
 [Gin Web Framework](https://github.com/gin-gonic/gin)
