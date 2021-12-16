@@ -65,7 +65,6 @@ func main() {
 				protocol1.Type.Light.RGB.Red = 0
 				protocol1.Type.Light.RGB.Green = 255
 				protocol1.Type.Light.RGB.Blue = 0
-
 			} else {
 				//blue
 				protocol1.Type.Light.RGB.Red = 0
@@ -78,21 +77,22 @@ func main() {
 				} else {
 					protocol1.Intensity.LightIntensity = 255
 				}
-				v, err := json.Marshal(protocol1)
-				if err != nil {
-					fmt.Println("json marshal error", err)
-				}
-				err = c.WriteMessage(websocket.TextMessage, []byte(string(v)))
-
-				if err != nil {
-					fmt.Println("send error", err)
-					time.Sleep(30 * time.Second)
-					main()
-				} else {
-					fmt.Println(string(v))
-				}
-				time.Sleep((500 * time.Millisecond))
 			}
+
+			v, err := json.Marshal(protocol1)
+			if err != nil {
+				fmt.Println("json marshal error", err)
+			}
+			err = c.WriteMessage(websocket.TextMessage, []byte(string(v)))
+
+			if err != nil {
+				fmt.Println("send error", err)
+				time.Sleep(30 * time.Second)
+				main()
+			} else {
+				fmt.Println(string(v))
+			}
+			time.Sleep(500 * time.Millisecond)
 
 			//for i := 0; i < 255; i++ {
 			//	protocol1.Intensity.LightIntensity = i

@@ -122,6 +122,9 @@ void setup() {
 
   pinMode(ONBOARD_LED,OUTPUT);
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  
+  // FastLED 2.1 Power management set at 5V, 500mA
+  //set_max_power_in_volts_and_milliamps(5, 500);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -137,7 +140,15 @@ void setup() {
   if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("No Wifi!");
-    return;
+    #if defined(ARDUINO)
+      #if defined(ARDUINO_SAMD_MKR1000)
+        NVIC_SystemReset();
+      #else
+        resetFunc();
+      #endif
+    #else
+      ESP.restart();
+    #endif
   }
 
   Serial.print("\nConnected to Wifi, Connecting to WebSockets Server @");
